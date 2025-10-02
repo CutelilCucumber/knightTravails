@@ -9,14 +9,14 @@ function knightMoves(origin, destination){
     if (bestCase(origin, destination)){
         console.log("Knight moves to "+destination.getVertex())
         console.log("Reached Destination in 1 move!")
+        return;
     }
     origin = Node(origin);
     
     breadthResult = breadthTravel(origin, destination);
-    for (let i=0; i<breadthResult[0].length; i++){
-        console.log("Knight moves: "+breadthResult[0][i])
-    }
-    console.log("Number of moves: "+breadthResult[1])
+    console.log(breadthResult);
+    console.log("Number of moves: "+breadthResult.length);
+    prettyPrint(breadthResult);
 
 
 
@@ -33,32 +33,52 @@ function knightMoves(origin, destination){
     function breadthTravel(currNode, targetNode){
         let queue = [currNode];
         let tried = [currNode.getVertex()];
-        let moves = [];
-        let numOfMoves = 0
         while (queue.length !== 0){
             let curr = queue.shift();
             for(let possibleMove of curr.getEdges()){
                 let foundAdjacent = bestCase(possibleMove, targetNode);
-                if (foundAdjacent){
-                    moves.push(foundAdjacent);
-                    moves.push(targetNode.getVertex());
-                    return [moves, numOfMoves];
-                }
-                if(!JSON.stringify(tried).includes(possibleMove)) queue.push(Node(possibleMove));
+                if (foundAdjacent) return backTrack(Node(possibleMove, curr));
+                if(!JSON.stringify(tried).includes(possibleMove)) queue.push(Node(possibleMove, curr));
                 tried.push(possibleMove);
             }
-            moves.push(curr.getVertex());
-            numOfMoves++;
+        }
+    }
+
+    function backTrack(foundNode){
+        let path = [foundNode.getVertex(),destination.getVertex()];
+        while (foundNode.getPrevious()){
+            foundNode = foundNode.getPrevious();
+            path.unshift(foundNode.getVertex());
+        }
+        return path;
+    }
+
+    function prettyPrint(path) {//vibe coded this shit
+        const size = 8;
+        // Create empty board
+        let board = Array.from({ length: size }, () => Array(size).fill("_"));
+        // Mark origin, path, destination
+        path.forEach(([x, y], i) => {
+            if (i === 0) board[y][x] = "O";           // origin
+            else if (i === path.length - 1) board[y][x] = "X"; // destination
+            else board[y][x] = i;                   // path
+        });
+        // Print the board
+        for (let row of board) {
+            console.log(row.join(" "));
         }
     }
 }
 
-function Node(input){
+function Node(input, previous){
     let [x, y] = input;
     let _vertex = input;
+    let _previous = previous ?? null;
     let _edges = generateEdges();
 
     const getVertex = () =>{return _vertex;}
+
+    const getPrevious = () =>{return _previous;}
 
     const getEdges = () => {return _edges;}
 
@@ -77,9 +97,10 @@ function Node(input){
 
     return {
         getVertex,
+        getPrevious,
         getEdges
     }
 }
 let start = [0, 0];
-let end = [7, 7];
+let end = [7, 6];
 knightMoves(start, end)
